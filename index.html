@@ -74,6 +74,13 @@
         Next version
       </label>
       <label>
+        <input
+          type="checkbox"
+          onchange="webApiVisible = this.checked; render()"
+        />
+        Web API
+      </label>
+      <label>
         <input type="checkbox" onchange="onlyError = this.checked; render()" />
         Only unsupported
       </label>
@@ -95,6 +102,7 @@
       var ua = navigator.userAgent
       var onlyError = false
       var nextVisible = false
+      var webApiVisible = false
 
       // prettier-ignore
       var data = [
@@ -602,9 +610,17 @@
         if (desc) data.reverse()
 
         var _data = data.filter(function (item) {
+          var version = item[0]
+
           if (!nextVisible) {
-            if (item[0] == 'next') {
+            if (/next/i.test(version)) {
               return false
+            }
+          }
+
+          if (!webApiVisible) {
+            if (/web/i.test(version)) {
+              return
             }
           }
 
