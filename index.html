@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <style>
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         margin: 0;
         padding: 0 1em;
@@ -17,11 +21,26 @@
       }
 
       form {
-        text-align: right;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5em;
       }
       label {
         display: inline-flex;
         align-items: center;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      input[type='search'] {
+        width: 6em;
+        height: 1.25em;
+        padding: 0 0.5em;
+        border: 0;
+        border-radius: 3px;
+        background: #333;
+        outline: none;
+        color: #fff;
       }
 
       table {
@@ -68,6 +87,13 @@
     <form>
       <label>
         <input
+          type="search"
+          placeholder="search"
+          oninput="keyword = this.value; render()"
+        />
+      </label>
+      <label>
+        <input
           type="checkbox"
           onchange="nextVisible = this.checked; render()"
         />
@@ -100,9 +126,10 @@
       var sortBy = 'version'
       var desc = true
       var ua = navigator.userAgent
-      var onlyError = false
+      var keyword = ''
       var nextVisible = false
       var webApiVisible = false
+      var onlyError = false
 
       // prettier-ignore
       var data = [
@@ -611,6 +638,10 @@
 
         var _data = data.filter(function (item) {
           var version = item[0]
+
+          if (keyword) {
+            return String(item).indexOf(keyword) != -1
+          }
 
           if (!nextVisible) {
             if (/next/i.test(version)) {
