@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ES TEST</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0 1em;
+        background: #272821;
+        color: #fff;
+        font: 12px/1 monospace;
+        font-family: Fira Code, Consolas, 'Courier New', monospace;
+        -webkit-text-size-adjust: none;
+      }
+
+      form {
+        text-align: right;
+      }
+      label {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      table {
+        margin: 1em 0;
+        width: 100%;
+        border-spacing: 0;
+      }
+      tr {
+        color: #0f0;
+      }
+      tr.error {
+        color: #f00;
+      }
+      tr.error > th:after {
+        content: ' ✗ ';
+      }
+      .onlyError tr:not(.error) {
+        display: none;
+      }
+      tr > * {
+        padding: 0 0.5em;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+      }
+      th {
+        font-weight: normal;
+        white-space: nowrap;
+        text-align: left;
+      }
+      td {
+        white-space: pre;
+      }
+      ::-webkit-scrollbar {
+        width: 0px;
+        height: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ES TEST</h1>
+
+    <p>UA</p>
+
+    <form>
+      <label>
+        <input
+          type="checkbox"
+          onchange="nextVisible = this.checked; render()"
+        />
+        Next version
+      </label>
+      <label>
+        <input type="checkbox" onchange="onlyError = this.checked; render()" />
+        Only unsupported
+      </label>
+    </form>
+
+    <table>
+      <tr>
+        <th>version</th>
+        <td>code</td>
+      </tr>
+    </table>
+
+    <script>
+      // https://compat-table.github.io/compat-table/
+      var value = 1
+      var array = []
+      var sortBy = 'version'
+      var desc = true
+      var ua = navigator.userAgent
+      var onlyError = false
+      var nextVisible = false
+
+      // prettier-ignore
+      var data = [
+        ['2009 es5', '{get _(){}, set _(v){}}'],
+        ['2009 es5', '{"trailing": "commas", }'],
+        ['2009 es5', '["trailing", "commas", ]'],
+        ['2009 es5', '{if: "Reserved words as property names" }'],
+        ['2009 es5', 'Object.create'],
+        ['2009 es5', 'Object.defineProperty'],
+        ['2009 es5', 'Object.defineProperties'],
+        ['2009 es5', 'Object.getPrototypeOf'],
+        ['2009 es5', 'Object.keys'],
+        ['2009 es5', 'Object.seal'],
+        ['2009 es5', 'Object.freeze'],
+        ['2009 es5', 'Object.preventExtensions'],
+        ['2009 es5', 'Object.isSealed'],
+        ['2009 es5', 'Object.isFrozen'],
+        ['2009 es5', 'Object.isExtensible'],
+        ['2009 es5', 'Object.getOwnPropertyDescriptor'],
+        ['2009 es5', 'Object.getOwnPropertyNames'],
+        ['2009 es5', 'Array.isArray'],
+        ['2009 es5', 'Array.prototype.indexOf'],
+        ['2009 es5', 'Array.prototype.lastIndexOf'],
+        ['2009 es5', 'Array.prototype.every'],
+        ['2009 es5', 'Array.prototype.some'],
+        ['2009 es5', 'Array.prototype.forEach'],
+        ['2009 es5', 'Array.prototype.map'],
+        ['2009 es5', 'Array.prototype.filter'],
+        ['2009 es5', 'Array.prototype.reduce'],
+        ['2009 es5', 'Array.prototype.reduceRight'],
+        ['2009 es5', '/* throw */ [].sort(null)'],
+        ['2009 es5', '[].sort(undefined)'],
+        ['2009 es5', '[].unshift(0) == 1'],
+        ['2009 es5', '"Property access on strings"[1]'],
+        ['2009 es5', 'String.prototype.split'],
+        ['2009 es5', 'String.prototype.substr'],
+        ['2009 es5', 'String.prototype.trim'],
+        ['2009 es5', 'Date.prototype.toISOString'],
+        ['2009 es5', 'Date.now'],
+        ['2009 es5', 'Date.prototype.toJSON'],
+        ['2009 es5', 'Function.prototype.bind'],
+        ['2009 es5', 'JSON'],
+        ['2009 es5', 'undefined = null, undefined !== null /* Immutable */'],
+        ['2009 es5', 'NaN = null, NaN !== null /* Immutable */'],
+        ['2009 es5', 'Infinity = null, Infinity !== null /* Immutable */'],
+        ['2009 es5', 'NaN.toExponential(Infinity)'],
+        ['2009 es5', '(function(a){return a}).apply(null, {0:true, length:1})'],
+        ['2009 es5', 'parseInt("010") === 10'],
+        ['2009 es5', '!Function().propertyIsEnumerable("prototype")'],
+        ['2009 es5', '(function(){ return toString.call(arguments) === "[object Arguments]"}())'],
+        ['2009 es5', 'var _\\u200c\\u200d = true /* Zero-width chars in identifiers */'],
+        ['2009 es5', 'var abstract /* Unreserved words */'],
+        ['2009 es5', '/* throw */ "use strict"; with({}){}'],
+        ['2015 es6', 'function(arg = "default"){}'],
+        ['2015 es6', 'function(...args){}'],
+        ['2015 es6', '[...[]]'],
+        ['2015 es6', 'Function(...[])'],
+        ['2015 es6', '{[1+1]: 2}'],
+        ['2015 es6', '{shorthand: true, name}'],
+        ['2015 es6', '{shorthand() { }}'],
+        ['2015 es6', '{"string key shorthand"() { }}'],
+        ['2015 es6', '{["computed"+"shorthand"]() { }}'],
+        ['2015 es6', '{get ["computed"+"shorthand"]() { }}'],
+        ['2015 es6', 'for(_ of []){ }'],
+        ['2015 es6', '0b1010'],
+        ['2015 es6', '`${ true }`'],
+        ['2015 es6', '/reg/yu'],
+        ['2015 es6', 'var [a, b] = [1, 2]'],
+        ['2015 es6', 'var {a: b} = {a: 1}'],
+        ['2015 es6', 'function(){ new.target }'],
+        ['2015 es6', 'let v'],
+        ['2015 es6', 'const v = 1'],
+        ['2015 es6', 'arrowFunction => true'],
+        ['2015 es6', 'class {}'],
+        ['2015 es6', 'function* (){}'],
+        ['2015 es6', 'ArrayBuffer'],
+        ['2015 es6', 'Map'],
+        ['2015 es6', 'Set'],
+        ['2015 es6', 'WeakMap'],
+        ['2015 es6', 'WeakSet'],
+        ['2015 es6', 'Proxy'],
+        ['2015 es6', 'Reflect'],
+        ['2015 es6', 'Promise'],
+        ['2015 es6', 'Symbol'],
+        ['2015 es6', '(function f(){}).name'],
+        ['2015 es6', 'Object.assign'],
+        ['2015 es6', 'Object.is'],
+        ['2015 es6', 'Object.getOwnPropertySymbols'],
+        ['2015 es6', 'Object.setPrototypeOf'],
+        ['2015 es6', 'String.raw'],
+        ['2015 es6', 'String.fromCodePoint'],
+        ['2015 es6', 'String.prototype.codePointAt'],
+        ['2015 es6', 'String.prototype.normalize'],
+        ['2015 es6', 'String.prototype.repeat'],
+        ['2015 es6', 'String.prototype.startsWith'],
+        ['2015 es6', 'String.prototype.endsWith'],
+        ['2015 es6', 'String.prototype.includes'],
+        ['2015 es6', 'Array.from'],
+        ['2015 es6', 'Array.of'],
+        ['2015 es6', 'Array.prototype.copyWithin'],
+        ['2015 es6', 'Array.prototype.find'],
+        ['2015 es6', 'Array.prototype.findIndex'],
+        ['2015 es6', 'Array.prototype.fill'],
+        ['2015 es6', 'Array.prototype.keys'],
+        ['2015 es6', 'Array.prototype.values'],
+        ['2015 es6', 'Array.prototype.entries'],
+        ['2015 es6', 'Number.isFinite'],
+        ['2015 es6', 'Number.isInteger'],
+        ['2015 es6', 'Number.isSafeInteger'],
+        ['2015 es6', 'Number.isNaN'],
+        ['2015 es6', 'Number.parseFloat'],
+        ['2015 es6', 'Number.parseInt'],
+        ['2015 es6', 'Number.EPSILON'],
+        ['2015 es6', 'Number.MIN_SAFE_INTEGER'],
+        ['2015 es6', 'Number.MAX_SAFE_INTEGER'],
+        ['2015 es6', 'Math.clz32'],
+        ['2015 es6', 'Math.imul'],
+        ['2015 es6', 'Math.sign'],
+        ['2015 es6', 'Math.log10'],
+        ['2015 es6', 'Math.log2'],
+        ['2015 es6', 'Math.log1p'],
+        ['2015 es6', 'Math.expm1'],
+        ['2015 es6', 'Math.cosh'],
+        ['2015 es6', 'Math.sinh'],
+        ['2015 es6', 'Math.tanh'],
+        ['2015 es6', 'Math.acosh'],
+        ['2015 es6', 'Math.asinh'],
+        ['2015 es6', 'Math.atanh'],
+        ['2015 es6', 'Math.trunc'],
+        ['2015 es6', 'Math.fround'],
+        ['2015 es6', 'Math.cbrt'],
+        ['2015 es6', 'Math.hypot'],
+        ['2015 es6', 'class extends Array {}'],
+        ['2015 es6', 'class extends RegExp {}'],
+        ['2015 es6', 'class extends Function {}'],
+        ['2015 es6', 'class extends Promise {}'],
+        ['2015 es6', 'class extends Boolean {}'],
+        ['2015 es6', 'class extends Number {}'],
+        ['2015 es6', 'class extends String {}'],
+        ['2015 es6', 'class extends Error {}'],
+        ['2015 es6', 'class extends Map {}'],
+        ['2015 es6', 'class extends Set {}'],
+        ['2015 es6', 'class extends Date {}'],
+        ['2015 es6', '({}).__proto__'],
+        ['2015 es6', '<!-- html-style comment -->; --> ; <!--'],
+        ['2016', '1 ** 2'],
+        ['2016', 'value **= 2'],
+        ['2016', 'Array.prototype.includes'],
+        ['2016', '/* throw */ new function*(){}'],
+        ['2016', '[...[...array]] = []'],
+        ['2016', '(function([...[...array]]){return true})([])'],
+        ['2017', 'Object.values'],
+        ['2017', 'Object.entries'],
+        ['2017', 'Object.getOwnPropertyDescriptors'],
+        ['2017', 'String.prototype.padStart'],
+        ['2017', 'String.prototype.padEnd'],
+        ['2017', '(function f( a, b, ) {return true})(1, 2, )'],
+        ['2017', 'async ()=> await true'],
+        ['2017', 'SharedArrayBuffer /* Cross-Origin-Opener-Policy, Cross-Origin-Embedder-Policy */'],
+        ['2017', 'SharedArrayBuffer[Symbol.species]'],
+        ['2017', 'SharedArrayBuffer.prototype.byteLength'],
+        ['2017', 'SharedArrayBuffer.prototype.slice'],
+        ['2017', 'SharedArrayBuffer.prototype[Symbol.toStringTag]'],
+        ['2017', 'Atomics.add'],
+        ['2017', 'Atomics.and'],
+        ['2017', 'Atomics.compareExchange'],
+        ['2017', 'Atomics.exchange'],
+        ['2017', 'Atomics.wait'],
+        ['2017', 'Atomics.notify'],
+        ['2017', 'Atomics.isLockFree'],
+        ['2017', 'Atomics.load'],
+        ['2017', 'Atomics.or'],
+        ['2017', 'Atomics.store'],
+        ['2017', 'Atomics.sub'],
+        ['2017', 'Atomics.xor'],
+        ['2017', '/reg/u'],
+        ['2017', '(function () {return !arguments.caller})()'],
+        ['2017', 'Object.prototype.__defineGetter__ /* Deprecated */'],
+        ['2017', 'Object.prototype.__defineSetter__ /* Deprecated */'],
+        ['2017', 'Object.prototype.__lookupGetter__ /* Deprecated */'],
+        ['2017', 'Object.prototype.__lookupSetter__ /* Deprecated */'],
+        ['2017', 'for (var i = 0 in {}) {}'],
+        ['2018', 'var {...x} = {...{}}'],
+        ['2018', 'Promise.prototype.finally'],
+        ['2018', '/reg/s'],
+        ['2018', '/(?<groupName>.)/'],
+        ['2018', '/(?<=lookbehind)./'],
+        ['2018', '/(?<!lookbehind)./'],
+        ['2018', '/\\p{Emoji}/u.test("🥰")'],
+        ['2018', 'async function*(){}'],
+        ['2018', 'async ()=> {for await (var v of (async function*(){})()){}}'],
+        ['2018', '/* throw */ Object.keys(new Proxy({}, { ownKeys() { return ["duplicate", "duplicate"]} }))'],
+        ['2019', '"description" in Symbol.prototype'],
+        ['2019', 'Object.fromEntries'],
+        ['2019', 'String.prototype.trimLeft'],
+        ['2019', 'String.prototype.trimRight'],
+        ['2019', 'String.prototype.trimStart'],
+        ['2019', 'String.prototype.trimEnd'],
+        ['2019', 'Array.prototype.flat'],
+        ['2019', 'Array.prototype.flatMap'],
+        ['2019', 'Array.prototype[Symbol.unscopables].flat'],
+        ['2019', 'Array.prototype[Symbol.unscopables].flatMap'],
+        ['2019', 'try {} catch {}'],
+        ['2019', '(function(/*keep*/){}).toString() == "function(/*keep*/){}"'],
+        ['2019', 'eval("\'\\u2028\'") === "\\u2028"'],
+        ['2020', 'String.prototype.matchAll'],
+        ['2020', '1000000000000000000000000000000n'],
+        ['2020', 'BigInt'],
+        ['2020', 'BigInt.asUintN'],
+        ['2020', 'BigInt.asIntN'],
+        ['2020', 'BigInt64Array'],
+        ['2020', 'BigUint64Array'],
+        ['2020', 'DataView.prototype.getBigInt64'],
+        ['2020', 'DataView.prototype.getBigUint64'],
+        ['2020', 'Promise.allSettled'],
+        ['2020', 'globalThis'],
+        ['2020', 'Object?.keys'],
+        ['2020', 'Object?.["keys"]'],
+        ['2020', 'Object?.["keys"]?.({})'],
+        ['2020', 'value ?? true'],
+        ['2021', 'String.prototype.replaceAll'],
+        ['2021', 'Promise.any'],
+        ['2021', 'WeakRef'],
+        ['2021', 'FinalizationRegistry'],
+        ['2021', 'value ||= true'],
+        ['2021', 'value &&= true'],
+        ['2021', 'value ??= true'],
+        ['2021', '1_000_000.000_000'],
+        ['2022', 'class {field = true; #privateField}'],
+        ['2022', 'class {static field = true; static #privateField}'],
+        ['2022', 'class {#privateMethod(){}}'],
+        ['2022', 'class {#x; checkPrivate(){#x in this}}'],
+        ['2022', 'Array.prototype.at'],
+        ['2022', 'String.prototype.at'],
+        ['2022', '(/*TypedArray*/Int8Array.prototype.constructor).prototype.at'],
+        ['2022', 'Object.hasOwn'],
+        ['2022', 'class { static {} }'],
+        ['2022', 'new Error("error", {cause:true}).cause'],
+        ['2022', '/reg/d'],
+        ['2023', 'Array.prototype.findLast'],
+        ['2023', 'Array.prototype.findLastIndex'],
+        ['2023', '!eval("#!/wash/your/hands")'],
+        ['2023', 'Array.prototype.toReversed'],
+        ['2023', 'Array.prototype.toSorted'],
+        ['2023', 'Array.prototype.toSpliced'],
+        ['2023', 'Array.prototype.with'],
+        ['2023', '(/*TypedArray*/Int8Array.prototype.constructor).prototype.toReversed'],
+        ['2023', '(/*TypedArray*/Int8Array.prototype.constructor).prototype.toSorted'],
+        ['2023', '(/*TypedArray*/Int8Array.prototype.constructor).prototype.with'],
+        ['2024', '/reg/v'],
+        ['2024', 'ArrayBuffer.prototype.transfer'],
+        ['2024', 'ArrayBuffer.prototype.transferToFixedLength'],
+        ['2024', '"detached" in ArrayBuffer.prototype'],
+        ['2024', 'Promise.withResolvers'],
+        ['2024', 'Object.groupBy'],
+        ['2024', 'Map.groupBy'],
+        ['2025', '/(?<duplicateNamed>x)|(?<duplicateNamed>true)/'],
+        ['2025', 'Set.prototype.intersection'],
+        ['2025', 'Set.prototype.union'],
+        ['2025', 'Set.prototype.difference'],
+        ['2025', 'Set.prototype.symmetricDifference'],
+        ['2025', 'Set.prototype.isDisjointFrom'],
+        ['2025', 'Set.prototype.isSubsetOf'],
+        ['2025', 'Set.prototype.isSupersetOf'],
+        ['2025', '/(?i:)/'],
+        ['2025', '/(?m:)/'],
+        ['2025', '/(?s:)/'],
+        ['2025', '[].values() instanceof Iterator'],
+        ['2025', 'class extends Iterator {}'],
+        ['2025', 'Iterator.from'],
+        ['2025', 'Iterator.prototype.drop'],
+        ['2025', 'Iterator.prototype.every'],
+        ['2025', 'Iterator.prototype.filter'],
+        ['2025', 'Iterator.prototype.find'],
+        ['2025', 'Iterator.prototype.flatMap'],
+        ['2025', 'Iterator.prototype.forEach'],
+        ['2025', 'Iterator.prototype.map'],
+        ['2025', 'Iterator.prototype.reduce'],
+        ['2025', 'Iterator.prototype.some'],
+        ['2025', 'Iterator.prototype.take'],
+        ['2025', 'Iterator.prototype.toArray'],
+        ['2025', 'Iterator.prototype[Symbol.toStringTag]'],
+        ['2025', 'Promise.try'],
+        // next
+        ['next', 'class C {@d f() {}}'],
+        ['next', '"$&" in RegExp'],
+        ['next', '"$1" in RegExp'],
+        ['next', 'RegExp.escape'],
+        ['next', 'Uint8Array.toBase64'],
+        ['next', 'Uint8Array.fromBase64'],
+        ['next', 'Uint8Array.setFromBase64'],
+        ['next', 'Uint8Array.toHex'],
+        ['next', 'Uint8Array.fromHex'],
+        ['next', 'Uint8Array.setFromHex'],
+        ['next', 'ShadowRealm'],
+        ['next', 'true || throw new Error'],
+        // Web API
+        ['Web API (2021)', '/* Attribution Reporting API 实验性 */ "attributionSrc" in HTMLAnchorElement.prototype'],
+        ['Web API (2021)', '/* Audio Output Devices API 实验性 */ navigator.mediaDevices.selectAudioOutput'],
+        ['Web API (2018)', '/* Background Fetch API 实验性 */ BackgroundFetchManager'],
+        ['Web API (2016)', '/* Background Sync */ SyncManager'],
+        ['Web API (2020)', '/* Background Tasks */ IdleDeadline'],
+        ['Web API (2018)', '/* Badging API */ navigator.setAppBadge'],
+        ['Web API (2018)', '/* Barcode Detection API 实验性 */ BarcodeDetector'],
+        ['Web API (2010)', '/* Battery API */ BatteryManager'],
+        ['Web API (2015)', '/* Beacon */ navigator.sendBeacon'],
+        ['Web API (2016)', '/* Bluetooth API 实验性 */ Bluetooth'],
+        ['Web API (2018)', '/* Broadcast Channel API */ BroadcastChannel'],
+        ['Web API (2020)', '/* CSS Custom Highlight API */ CSS'],
+        ['Web API (2016)', '/* CSS Font Loading API */ FontFace'],
+        ['Web API (2018)', '/* CSS Painting API 实验性 */ PaintWorkletGlobalScope'],
+        ['Web API (2020)', '/* CSS Properties and Values API */ CSSPropertyRule'],
+        ['Web API (2018)', '/* CSS Typed Object Model API */ CSSStyleValue'],
+        ['Web API (2011)', '/* CSSOM */ CSSStyleSheet'],
+        ['Web API (2009)', '/* Canvas API */ CanvasRenderingContext2D'],
+        ['Web API (2012)', '/* Channel Messaging API */ MessageChannel'],
+        ['Web API (2015)', '/* Clipboard API */ Clipboard'],
+        ['Web API (2020)', '/* Compression Streams API */ ReadableStream, WritableStream'],
+        ['Web API (2020)', '/* Compute Pressure API 实验性 */ PressureObserver'],
+        ['Web API (2011)', '/* Console API */ console'],
+        ['Web API (2021)', '/* Contact Picker API 实验性 */ ContactPicker'],
+        ['Web API (2018)', '/* Content Index API 实验性 */ ContentIndex'],
+        ['Web API (2019)', '/* Cookie Store API */ CookieStore'],
+        ['Web API (2016)', '/* Credential Management API */ Credential'],
+        ['Web API (1998)', '/* DOM */ Document, Element'],
+        ['Web API (2016)', '/* Device Memory API */ navigator.deviceMemory'],
+        ['Web API (2014)', '/* Device Orientation Events */ DeviceOrientationEvent'],
+        ['Web API (2018)', '/* Document Picture-in-Picture API 实验性 */ DocumentPictureInPicture'],
+        ['Web API (2021)', '/* EditContext API 实验性 */ EditContext'],
+        ['Web API (2016)', '/* Encoding API */ TextEncoder, TextDecoder'],
+        ['Web API (2013)', '/* Encrypted Media Extensions */ MediaKeys'],
+        ['Web API (2021)', '/* EyeDropper API 实验性 */ EyeDropper'],
+        ['Web API (2021)', '/* FedCM API 实验性 */ FederatedCredential'],
+        ['Web API (2021)', '/* Fenced Frame API 实验性 */ Fence'],
+        ['Web API (2015)', '/* Fetch API */ fetch'],
+        ['Web API (2010)', '/* File API */ File, FileReader'],
+        ['Web API (2012)', '/* File System API */ FileSystemHandle'],
+        ['Web API (2012)', '/* File and Directory Entries API */ FileSystemDirectoryEntry'],
+        ['Web API (2015)', '/* Force Touch Events 非标准 */ MouseEvent.WEBKIT_FORCE_AT_MOUSE_DOWN'],
+        ['Web API (2013)', '/* Fullscreen API */ Element.prototype.requestFullscreen'],
+        ['Web API (2016)', '/* Gamepad API */ Gamepad'],
+        ['Web API (2008)', '/* Geolocation API */ Geolocation'],
+        ['Web API (2018)', '/* Geometry Interfaces */ DOMRect, DOMPoint'],
+        ['Web API (1998)', '/* HTML DOM */ HTMLElement'],
+        ['Web API (2010)', '/* HTML Drag and Drop API */ DataTransfer'],
+        ['Web API (2014)', '/* History API */ History'],
+        ['Web API (2017)', '/* Houdini API */ CSS.paintWorklet.addModule'],
+        ['Web API (2021)', '/* Idle Detection API 实验性 */ IdleDetector'],
+        ['Web API (2017)', '/* Image Capture API 实验性 */ ImageCapture'],
+        ['Web API (2010)', '/* IndexedDB */ indexedDB'],
+        ['Web API (2018)', '/* Ink API 实验性 */ Ink'],
+        ['Web API (2016)', '/* Input Device Capabilities API 实验性 */ InputDeviceCapabilities'],
+        ['Web API (2018)', '/* Insertable Streams for MediaStreamTrack API */ MediaStreamTrack'],
+        ['Web API (2016)', '/* Intersection Observer API */ IntersectionObserver'],
+        ['Web API (2021)', '/* Invoker Commands API 实验性 */ CommandEvent'],
+        ['Web API (2018)', '/* Keyboard API 实验性 */ Keyboard'],
+        ['Web API (2021)', '/* Launch Handler API 实验性 */ LaunchParams'],
+        ['Web API (2021)', '/* Local Font Access API 实验性 */ queryLocalFonts'],
+        ['Web API (2017)', '/* Media Capabilities API */ MediaCapabilities'],
+        ['Web API (2016)', '/* Media Capture and Streams */ MediaStream'],
+        ['Web API (2018)', '/* Media Session API */ MediaSession'],
+        ['Web API (2013)', '/* Media Source Extensions 实验性 */ MediaSource'],
+        ['Web API (2016)', '/* MediaStream Recording */ MediaRecorder'],
+        ['Web API (2021)', '/* Navigation API 实验性 */ Navigation'],
+        ['Web API (2016)', '/* Network Information API */ NetworkInformation'],
+        ['Web API (2013)', '/* Page Visibility API */ document.visibilityState'],
+        ['Web API (2021)', '/* Payment Handler API 实验性 */ PaymentRequest'],
+        ['Web API (2017)', '/* Payment Request API */ PaymentRequest'],
+        ['Web API (2014)', '/* Performance API */ Performance'],
+        ['Web API (2018)', '/* Periodic Background Sync 实验性 */ PeriodicSyncManager'],
+        ['Web API (2016)', '/* Permissions API */ Permissions'],
+        ['Web API (2018)', '/* Picture-in-Picture API */ PictureInPictureWindow'],
+        ['Web API (2015)', '/* Pointer Events */ PointerEvent'],
+        ['Web API (2015)', '/* Pointer Lock API */ Element.prototype.requestPointerLock'],
+        ['Web API (2021)', '/* Popover API */ HTMLElement.prototype.showPopover'],
+        ['Web API (2017)', '/* Presentation API 实验性 */ Presentation'],
+        ['Web API (2021)', '/* Prioritized Task Scheduling API */ scheduler'],
+        ['Web API (2015)', '/* Push API */ PushManager'],
+        ['Web API (2018)', '/* Remote Playback API */ RemotePlayback'],
+        ['Web API (2021)', '/* Reporting API 实验性 */ ReportingObserver'],
+        ['Web API (2016)', '/* Resize Observer API */ ResizeObserver'],
+        ['Web API (2001)', '/* SVG */ SVGElement'],
+        ['Web API (2016)', '/* Screen Capture API */ CaptureController'],
+        ['Web API (2016)', '/* Screen Orientation API */ ScreenOrientation'],
+        ['Web API (2020)', '/* Screen Wake Lock API */ WakeLock'],
+        ['Web API (2010)', '/* Selection API */ Selection'],
+        ['Web API (2016)', '/* Sensor API */ Sensor'],
+        ['Web API (2012)', '/* Server Sent Events */ EventSource'],
+        ['Web API (2015)', '/* Service Workers API */ ServiceWorker'],
+        ['Web API (2021)', '/* Shared Storage API 实验性 */ SharedStorage'],
+        ['Web API (2021)', '/* Speculation Rules API 实验性 */ HTMLScriptElement.supports("speculationrules")'],
+        ['Web API (2010)', '/* Storage */ localStorage, sessionStorage'],
+        ['Web API (2018)', '/* Storage Access API */ document.requestStorageAccess'],
+        ['Web API (2018)', '/* Streams */ ReadableStream, WritableStream'],
+        ['Web API (2021)', '/* Topics API 实验性 非标准 */ document.browsingTopics'],
+        ['Web API (2010)', '/* Touch Events */ TouchEvent'],
+        ['Web API (2020)', '/* Trusted Types API */ TrustedTypePolicy'],
+        ['Web API (2000)', '/* UI Events */ UIEvent'],
+        ['Web API (2014)', '/* URL API */ URL'],
+        ['Web API (2021)', '/* URL Fragment Text Directives */ FragmentDirective'],
+        ['Web API (2021)', '/* URL Pattern API 实验性 */ URLPattern'],
+        ['Web API (2021)', '/* User-Agent Client Hints API 实验性 */ NavigatorUAData'],
+        ['Web API (2015)', '/* Vibration API */ navigator.vibrate'],
+        ['Web API (2021)', '/* View Transitions API */ ViewTransition'],
+        ['Web API (2021)', '/* VirtualKeyboard API 实验性 */ VirtualKeyboard'],
+        ['Web API (2018)', '/* Visual Viewport */ VisualViewport'],
+        ['Web API (2016)', '/* Web Animations */ Animation'],
+        ['Web API (2013)', '/* Web Audio API */ AudioContext'],
+        ['Web API (2016)', '/* Web Authentication API */ PublicKeyCredential'],
+        ['Web API (2016)', '/* Web Components */ CustomElementRegistry'],
+        ['Web API (2015)', '/* Web Crypto API */ crypto'],
+        ['Web API (2016)', '/* Web Locks API */ LockManager'],
+        ['Web API (2016)', '/* Web MIDI API */ MIDIInputMap'],
+        ['Web API (2021)', '/* Web NFC API 实验性 */ NDEFReader'],
+        ['Web API (2015)', '/* Web Notifications */ Notification'],
+        ['Web API (2021)', '/* Web Serial API 实验性 */ Serial'],
+        ['Web API (2018)', '/* Web Share API */ navigator.share'],
+        ['Web API (2012)', '/* Web Speech API */ SpeechRecognition'],
+        ['Web API (2010)', '/* Web Storage API */ localStorage, sessionStorage'],
+        ['Web API (2012)', '/* Web Workers API */ Worker'],
+        ['Web API (2021)', '/* WebCodecs API */ VideoDecoder'],
+        ['Web API (2011)', '/* WebGL */ WebGLRenderingContext'],
+        ['Web API (2021)', '/* WebGPU API 实验性 */ GPU'],
+        ['Web API (2021)', '/* WebHID API 实验性 */ HID'],
+        ['Web API (2021)', '/* WebOTP API */ OTPCredential'],
+        ['Web API (2011)', '/* WebRTC */ RTCPeerConnection'],
+        ['Web API (2011)', '/* WebSockets API */ WebSocket'],
+        ['Web API (2021)', '/* WebTransport API */ WebTransport'],
+        ['Web API (2021)', '/* WebUSB API 实验性 */ USB'],
+        ['Web API (2016)', '/* WebVR API 非标准 已弃用 */ VRDisplay'],
+        ['Web API (2013)', '/* WebVTT */ VTTCue'],
+        ['Web API (2018)', '/* WebXR Device API 实验性 */ navigator.xr'],
+        ['Web API (2021)', '/* Window Controls Overlay API 实验性 */ WindowControlsOverlay'],
+        ['Web API (2021)', '/* Window Management API 实验性 */ ScreenDetails'],
+        ['Web API (2023)', '/* XMLHttpRequest API */ XMLHttpRequest']
+        
+        ['Intl', 'Intl'],
+        ['Intl', 'Intl.Collator'],
+        ['Intl', 'Intl.Collator().compare'],
+        ['Intl', 'Intl.Collator.prototype.resolvedOptions'],
+        ['Intl', 'Intl.NumberFormat'],
+        ['Intl', 'Intl.DateTimeFormat '],
+        ['Intl', 'String.prototype.localeCompare'],
+        ['Intl', 'Number.prototype.toLocaleString'],
+        ['Intl', 'Array.prototype.toLocaleString'],
+        ['Intl', 'Object.prototype.toLocaleString'],
+        ['Intl', 'Date.prototype.toLocaleString'],
+        ['Intl', 'Date.prototype.toLocaleDateString'],
+        ['Intl', 'Date.prototype.toLocaleTimeString'],
+        ['non-standard', 'new Error().stack'],
+        // end
+        null
+      ].filter(Boolean)
+
+      function isSupported(code) {
+        var supported = false
+
+        // NO
+        if (/^\/\* throw \*\//.test(code)) {
+          try {
+            eval(code)
+            return false
+          } catch (error) {
+            return true
+          }
+        }
+
+        // code
+        try {
+          eval(code)
+          supported = true
+        } catch (error) {}
+
+        // expression
+        try {
+          supported = eval('(' + code + ')')
+        } catch (error) {}
+
+        return !!supported
+      }
+
+      function $(selector) {
+        return document.getElementsByTagName(selector)[0]
+      }
+
+      var p = $('p')
+      var table = $('table')
+      var TR = $('tr')
+
+      function render() {
+        p.textContent = ua
+        table.textContent = ''
+
+        table.className = onlyError ? 'onlyError' : ''
+
+        if (sortBy == 'version') {
+          data.sort(function (a, b) {
+            a = a.join('')
+            b = b.join('')
+            if (a > b) return 1
+            if (a < b) return -1
+            return 0
+          })
+        }
+        if (desc) data.reverse()
+
+        var _data = data.filter(function (item) {
+          if (!nextVisible) {
+            if (item[0] == 'next') {
+              return false
+            }
+          }
+
+          return true
+        })
+        for (var i = 0; i < _data.length; i++) {
+          var item = _data[i]
+          var version = item[0]
+          var code = item[1]
+          var supported = isSupported(code)
+
+          /**@type HTMLElement */
+          var tr = TR.cloneNode(true)
+          tr.children[0].textContent = version
+          tr.children[1].textContent = code
+          if (!supported) tr.className = 'error'
+          table.appendChild(tr)
+        }
+      }
+
+      setTimeout(render)
+      setTimeout(render, 1)
+    </script>
+
+    <script type="module">
+      data.push(['module', '`<script type="module"><\/script>`'])
+    </script>
+    <script nomodule>
+      data.push(['module', '<script type="module"><\/script>'])
+    </script>
+  </body>
+</html>
