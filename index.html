@@ -102,6 +102,13 @@
       <label>
         <input
           type="checkbox"
+          onchange="intlVisible = this.checked; render()"
+        />
+        Intl
+      </label>
+      <label>
+        <input
+          type="checkbox"
           onchange="webApiVisible = this.checked; render()"
         />
         Web API
@@ -128,6 +135,7 @@
       var ua = navigator.userAgent
       var keyword = ''
       var nextVisible = false
+      var intlVisible = false
       var webApiVisible = false
       var onlyError = false
 
@@ -636,27 +644,40 @@
         }
         if (desc) data.reverse()
 
-        var _data = data.filter(function (item) {
-          var version = item[0]
+        var _data = data
+          .filter(function (item) {
+            var version = item[0]
 
-          if (keyword) {
-            return String(item).indexOf(keyword) != -1
-          }
-
-          if (!nextVisible) {
-            if (/next/i.test(version)) {
-              return false
+            if (!nextVisible) {
+              if (/next/i.test(version)) {
+                return false
+              }
             }
-          }
 
-          if (!webApiVisible) {
-            if (/web/i.test(version)) {
-              return
+            if (!intlVisible) {
+              if (/intl/i.test(version)) {
+                return false
+              }
             }
-          }
 
-          return true
-        })
+            if (!webApiVisible) {
+              if (/web/i.test(version)) {
+                return false
+              }
+            }
+
+            return true
+          })
+          .filter(function (item) {
+            var version = item[0]
+
+            if (keyword) {
+              return String(item).indexOf(keyword) != -1
+            }
+
+            return true
+          })
+
         for (var i = 0; i < _data.length; i++) {
           var item = _data[i]
           var version = item[0]
