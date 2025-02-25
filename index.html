@@ -672,7 +672,17 @@
             var version = item[0]
 
             if (keyword) {
-              return String(item).indexOf(keyword) != -1
+              var included = String(item).indexOf(keyword) != -1
+              if (included) {
+                return true
+              }
+
+              var matched = String(item).match(new RegExp(keyword, 'i'))
+              if (matched) {
+                return true
+              }
+
+              return false
             }
 
             return true
